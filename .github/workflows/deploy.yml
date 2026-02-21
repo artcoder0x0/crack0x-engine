@@ -83,4 +83,4 @@ jobs:
               --name crack0x-engine \
               -p 3005:3005 \
               $DOCKERHUB_USERNAME/crack0x-engine:$IMAGE_TAG
-            sudu rm -rf crack0x-engine
+            sudo rm -rf crack0x-engine
