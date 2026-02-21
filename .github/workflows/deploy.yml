@@ -31,7 +31,7 @@ jobs:
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./src
+          context: ./
           platforms: linux/amd64
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/crack0x-engine:${{ env.IMAGE_TAG }}
