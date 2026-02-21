@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CRACK0X ENGINE — Elite Mass Mailer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #060a14;
+  --panel:    #0d1320;
+  --card:     #111928;
+  --cyan:     #00cdc8;
+  --magenta:  #ff00aa;
+  --ok:       #00ff9f;
+  --warn:     #ffa500;
+  --err:      #ff3366;
+  --dim:      #1a2332;
+  --lo:       #4a5568;
+  --mid:      #8b95a5;
+  --hi:       #e8ecf0;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--hi);
+  font-family: 'Syne', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── Custom cursor ── */
+#cursor {
+  position: fixed; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cyan); pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: transform 0.06s, background 0.2s;
+  box-shadow: 0 0 12px var(--cyan), 0 0 24px var(--cyan);
+}
+#cursor-ring {
+  position: fixed; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--cyan); pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: transform 0.18s ease-out, opacity 0.2s;
+  opacity: 0.5;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
+
+/* ── Noise overlay ── */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+}
+
+/* ── Grid bg lines ── */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,205,200,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,205,200,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Sections ── */
+section { position: relative; z-index: 1; }
+
+/* ══════════════════════════════════════════════════
+   NAV
+══════════════════════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 48px;
+  background: rgba(6,10,20,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--dim);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo .flame { font-size: 20px; animation: flamePulse 1.4s ease-in-out infinite alternate; }
+@keyframes flamePulse {
+  0%   { filter: drop-shadow(0 0 4px #ff6b2b) drop-shadow(0 0 10px #ff6b2b); font-size: 18px; }
+  33%  { filter: drop-shadow(0 0 6px #ffa500) drop-shadow(0 0 14px #ffa500); font-size: 21px; }
+  66%  { filter: drop-shadow(0 0 8px #ff00aa) drop-shadow(0 0 18px #ff00aa); font-size: 20px; }
+  100% { filter: drop-shadow(0 0 6px #ff3366) drop-shadow(0 0 12px #ff3366); font-size: 22px; }
+}
+.nav-logo .brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700; font-style: italic;
+  font-size: 15px; letter-spacing: 2.5px;
+  color: var(--magenta);
+  text-shadow: 0 0 10px rgba(255,0,170,0.6);
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,0,170,0.5);
+  text-decoration-thickness: 2px;
+  position: relative;
+}
+.nav-logo .brand::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: calc(50% - 4px);
+  height: 1px; background: rgba(255,0,170,0.3);
+}
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a {
+  color: var(--mid); font-size: 12px; letter-spacing: 0.12em;
+  text-decoration: none; text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--cyan); }
+.nav-cta {
+  background: transparent; border: 1px solid var(--cyan);
+  color: var(--cyan); padding: 7px 20px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 0.1em; cursor: none; text-transform: uppercase;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.nav-cta:hover { background: rgba(0,205,200,0.1); box-shadow: 0 0 20px rgba(0,205,200,0.25); }
+
+/* ══════════════════════════════════════════════════
+   HERO
+══════════════════════════════════════════════════ */
+#hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative; overflow: hidden;
+}
+.hero-orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+}
+.orb1 { width: 500px; height: 500px; background: rgba(0,205,200,0.07); top: 10%; left: -100px; }
+.orb2 { width: 400px; height: 400px; background: rgba(255,0,170,0.06); bottom: 5%; right: -80px; }
+.orb3 { width: 300px; height: 300px; background: rgba(0,255,159,0.05); top: 40%; left: 50%; transform: translateX(-50%); }
+
+.hero-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.25em; color: var(--cyan);
+  text-transform: uppercase; margin-bottom: 24px;
+  opacity: 0; animation: fadeUp 0.6s 0.2s forwards;
+}
+.hero-title {
+  font-size: clamp(48px, 8vw, 100px);
+  font-weight: 800; line-height: 0.95;
+  letter-spacing: -2px;
+  margin-bottom: 10px;
+  opacity: 0; animation: fadeUp 0.7s 0.35s forwards;
+}
+.hero-title .line1 { display: block; color: var(--hi); }
+.hero-title .line2 {
+  display: block;
+  font-style: italic;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-sub {
+  max-width: 560px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; line-height: 1.8; color: var(--mid);
+  margin: 28px auto;
+  opacity: 0; animation: fadeUp 0.7s 0.5s forwards;
+}
+.hero-btns {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  opacity: 0; animation: fadeUp 0.7s 0.65s forwards;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan), var(--magenta));
+  color: #000; font-weight: 700; font-size: 12px;
+  padding: 13px 32px; border: none; border-radius: 4px;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,205,200,0.35); }
+.btn-ghost {
+  background: transparent; color: var(--hi);
+  border: 1px solid var(--dim); font-size: 12px;
+  padding: 13px 32px; border-radius: 4px;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.hero-stats {
+  display: flex; gap: 48px; justify-content: center; margin-top: 64px;
+  opacity: 0; animation: fadeUp 0.7s 0.8s forwards;
+}
+.stat-item { text-align: center; }
+.stat-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 36px; font-weight: 700; color: var(--cyan);
+  text-shadow: 0 0 20px rgba(0,205,200,0.4);
+  display: block;
+}
+.stat-label { font-size: 11px; color: var(--lo); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 4px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrolling ticker */
+.ticker-wrap {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  border-top: 1px solid var(--dim); overflow: hidden;
+  background: rgba(13,19,32,0.8);
+  padding: 10px 0;
+}
+.ticker {
+  display: flex; gap: 0; white-space: nowrap;
+  animation: ticker 28s linear infinite;
+}
+.ticker-item {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--lo); padding: 0 40px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ticker-item span { color: var(--cyan); margin-right: 8px; }
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ══════════════════════════════════════════════════
+   FEATURES GRID
+══════════════════════════════════════════════════ */
+#features {
+  padding: 120px 48px;
+  max-width: 1300px; margin: 0 auto;
+}
+.section-header { text-align: center; margin-bottom: 72px; }
+.section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.3em; color: var(--cyan);
+  text-transform: uppercase; margin-bottom: 16px; display: block;
+}
+.section-title {
+  font-size: clamp(32px, 4vw, 52px); font-weight: 800;
+  line-height: 1.1; letter-spacing: -1px;
+}
+.section-title em {
+  font-style: italic;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.feat-card {
+  background: var(--card);
+  border: 1px solid var(--dim);
+  border-radius: 10px;
+  padding: 28px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  cursor: none;
+}
+.feat-card::before {
+  content: ''; position: absolute; inset: 0; opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,205,200,0.06), transparent 60%);
+}
+.feat-card:hover { border-color: rgba(0,205,200,0.3); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+.feat-card:hover::before { opacity: 1; }
+.feat-icon {
+  font-size: 28px; margin-bottom: 16px; display: block;
+  filter: drop-shadow(0 0 8px rgba(0,205,200,0.3));
+}
+.feat-title {
+  font-size: 16px; font-weight: 700; color: var(--hi);
+  margin-bottom: 8px; letter-spacing: -0.3px;
+}
+.feat-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; line-height: 1.8; color: var(--mid);
+}
+.feat-tags {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px;
+}
+.feat-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  padding: 2px 7px; border-radius: 3px; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tag-cyan { background: rgba(0,205,200,0.12); color: var(--cyan); }
+.tag-mag  { background: rgba(255,0,170,0.12); color: var(--magenta); }
+.tag-ok   { background: rgba(0,255,159,0.12); color: var(--ok); }
+.tag-warn { background: rgba(255,165,0,0.12); color: var(--warn); }
+
+/* accent corner */
+.feat-card .corner {
+  position: absolute; top: 0; right: 0;
+  width: 60px; height: 60px; overflow: hidden;
+}
+.feat-card .corner::after {
+  content: ''; position: absolute; top: -30px; right: -30px;
+  width: 60px; height: 60px;
+  background: rgba(0,205,200,0.08);
+  transform: rotate(45deg);
+}
+
+/* ══════════════════════════════════════════════════
+   TAB SHOWCASE
+══════════════════════════════════════════════════ */
+#tabs-section {
+  padding: 100px 48px;
+  background: linear-gradient(180deg, transparent, rgba(0,205,200,0.02), transparent);
+}
+.tabs-inner { max-width: 1100px; margin: 0 auto; }
+.tab-showcase {
+  display: flex; gap: 48px; align-items: flex-start;
+  margin-top: 60px;
+}
+.tab-nav-pills {
+  flex: 0 0 200px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.tab-pill {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 6px; border: 1px solid transparent;
+  font-size: 12px; color: var(--mid); cursor: none;
+  transition: all 0.2s; background: transparent;
+  text-align: left;
+}
+.tab-pill:hover { color: var(--hi); background: var(--card); }
+.tab-pill.active {
+  background: rgba(0,205,200,0.1); border-color: rgba(0,205,200,0.3);
+  color: var(--cyan); font-weight: 700;
+}
+.tab-pill .t-icon { font-size: 14px; flex-shrink: 0; }
+.tab-content-area {
+  flex: 1; min-height: 420px;
+  background: var(--card); border: 1px solid var(--dim);
+  border-radius: 10px; overflow: hidden;
+}
+.tab-panel { display: none; padding: 36px; }
+.tab-panel.active { display: block; }
+.tab-panel-title {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+  margin-bottom: 6px; color: var(--hi);
+}
+.tab-panel-title span { color: var(--cyan); }
+.tab-panel-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; line-height: 1.8; color: var(--mid); margin-bottom: 24px;
+}
+.tab-feature-list { display: flex; flex-direction: column; gap: 8px; }
+.tfl-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--mid);
+  line-height: 1.6;
+}
+.tfl-item::before { content: '→'; color: var(--cyan); flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════
+   METRICS STRIP
+══════════════════════════════════════════════════ */
+#metrics {
+  padding: 80px 48px;
+  border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim);
+  background: var(--panel);
+}
+.metrics-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 32px; text-align: center;
+}
+.metric-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 42px; font-weight: 700; display: block;
+  background: linear-gradient(135deg, var(--cyan), var(--ok));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+.metric-label {
+  font-size: 11px; color: var(--lo);
+  text-transform: uppercase; letter-spacing: 0.14em;
+  margin-top: 8px; display: block;
+}
+.metric-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--lo); margin-top: 4px; display: block;
+}
+
+/* ══════════════════════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════════════════════ */
+#how {
+  padding: 120px 48px;
+  max-width: 1100px; margin: 0 auto;
+}
+.steps-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0; margin-top: 60px; position: relative;
+}
+.steps-grid::after {
+  content: ''; position: absolute; top: 32px; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--dim) 20%, var(--dim) 80%, transparent);
+}
+.step {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 0 24px; position: relative; z-index: 1;
+}
+.step-num {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--dim);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700;
+  color: var(--cyan); margin-bottom: 20px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.step:hover .step-num { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,205,200,0.25); }
+.step-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.step-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; line-height: 1.8; color: var(--mid);
+}
+
+/* ══════════════════════════════════════════════════
+   TECH STACK STRIP
+══════════════════════════════════════════════════ */
+#tech {
+  padding: 80px 48px;
+  background: var(--panel); border-top: 1px solid var(--dim);
+}
+.tech-inner { max-width: 1100px; margin: 0 auto; }
+.tech-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px; margin-top: 40px;
+}
+.tech-chip {
+  background: var(--card); border: 1px solid var(--dim);
+  border-radius: 6px; padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--mid); text-align: center; letter-spacing: 0.06em;
+  transition: border-color 0.2s, color 0.2s;
+  cursor: none;
+}
+.tech-chip:hover { border-color: var(--cyan); color: var(--cyan); }
+.tech-chip .t-cat { font-size: 9px; color: var(--lo); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ══════════════════════════════════════════════════
+   CTA
+══════════════════════════════════════════════════ */
+#cta {
+  padding: 140px 48px;
+  text-align: center; position: relative; overflow: hidden;
+}
+#cta .orb-cta {
+  position: absolute; width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,205,200,0.06), transparent 60%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.cta-title {
+  font-size: clamp(36px, 5vw, 72px); font-weight: 800;
+  line-height: 1.05; letter-spacing: -2px; margin-bottom: 20px;
+}
+.cta-title em {
+  font-style: italic;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--ok));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.cta-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--mid); margin-bottom: 40px; line-height: 1.7;
+}
+.cta-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,255,159,0.08); border: 1px solid rgba(0,255,159,0.25);
+  border-radius: 4px; padding: 6px 14px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ok);
+  margin-bottom: 32px;
+}
+.cta-badge::before { content: '●'; font-size: 8px; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ══════════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════════ */
+footer {
+  padding: 40px 48px;
+  border-top: 1px solid var(--dim);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--panel);
+}
+.footer-brand {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  font-style: italic; font-weight: 700; color: var(--magenta);
+  text-decoration: line-through; text-decoration-color: rgba(255,0,170,0.4);
+  text-shadow: 0 0 10px rgba(255,0,170,0.4);
+}
+.footer-note {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--lo); letter-spacing: 0.08em;
+}
+
+/* ══════════════════════════════════════════════════
+   SCROLL REVEAL
+══════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ══════════════════════════════════════════════════
+   GLITCH TEXT
+══════════════════════════════════════════════════ */
+.glitch {
+  position: relative; display: inline-block;
+}
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0;
+  font: inherit; color: inherit;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+}
+.glitch::before {
+  color: var(--cyan); animation: glitch1 3.5s infinite;
+  transform: translateX(-2px);
+}
+.glitch::after {
+  color: var(--magenta); animation: glitch2 3.5s infinite;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  transform: translateX(2px);
+}
+@keyframes glitch1 {
+  0%,90%,100% { transform: translateX(-2px); opacity: 0; }
+  91%          { transform: translateX(2px); opacity: 0.6; }
+  93%          { transform: translateX(-4px); opacity: 0.4; }
+  95%          { transform: translateX(0); opacity: 0; }
+}
+@keyframes glitch2 {
+  0%,92%,100% { transform: translateX(2px); opacity: 0; }
+  93%          { transform: translateX(-2px); opacity: 0.5; }
+  95%          { transform: translateX(4px); opacity: 0.3; }
+  97%          { transform: translateX(0); opacity: 0; }
+}
+
+/* responsive */
+@media(max-width:768px) {
+  nav { padding: 12px 20px; }
+  .nav-links { display: none; }
+  #features, #tabs-section, #how, #tech, #cta { padding: 80px 20px; }
+  #metrics { padding: 60px 20px; }
+  .tab-showcase { flex-direction: column; }
+  .tab-nav-pills { flex-direction: row; flex-wrap: wrap; flex: none; }
+  footer { flex-direction: column; gap: 12px; text-align: center; }
+  .hero-stats { gap: 28px; }
+  .steps-grid::after { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">
+    <span class="flame">🔥</span>
+    <span class="brand">CRACK0X ENGINE</span>
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#tabs-section">Modules</a>
+    <a href="#metrics">Performance</a>
+    <a href="#how">How It Works</a>
+    <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Get Access</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-orb orb1"></div>
+  <div class="hero-orb orb2"></div>
+  <div class="hero-orb orb3"></div>
+
+  <div class="hero-label">// Elite Mass Communication Platform</div>
+  <h1 class="hero-title">
+    <span class="line1 glitch" data-text="CRACK0X">CRACK0X</span>
+    <span class="line2">ENGINE v3.2</span>
+  </h1>
+  <p class="hero-sub">
+    The most advanced mass mailing & communication suite ever built.<br/>
+    12 modules. Unlimited scale. Zero compromise.
+  </p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Explore Features</button>
+    <button class="btn-ghost" onclick="document.getElementById('tabs-section').scrollIntoView({behavior:'smooth'})">View Modules</button>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num" id="cnt-smtp">0</span>
+      <span class="stat-label">SMTP Servers</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="cnt-speed">0</span>
+      <span class="stat-label">Emails / Hour</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="cnt-modules">0</span>
+      <span class="stat-label">Modules</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="cnt-uptime">0</span>
+      <span class="stat-label">% Uptime</span>
+    </div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker"></div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <div class="section-header reveal">
+    <span class="section-tag">// Core Capabilities</span>
+    <h2 class="section-title">Every tool you need.<br/><em>Nothing you don't.</em></h2>
+  </div>
+
+  <div class="features-grid" id="feat-grid"></div>
+</section>
+
+<!-- ── METRICS ── -->
+<section id="metrics">
+  <div class="metrics-inner reveal">
+    <div>
+      <span class="metric-val" data-target="500000">0</span>
+      <span class="metric-label">Max emails/day</span>
+      <span class="metric-sub">across cluster nodes</span>
+    </div>
+    <div>
+      <span class="metric-val" data-target="99">0</span>
+      <span class="metric-label">% Deliverability</span>
+      <span class="metric-sub">with warm SMTP + auth</span>
+    </div>
+    <div>
+      <span class="metric-val" data-target="12">0</span>
+      <span class="metric-label">Modules</span>
+      <span class="metric-sub">fully integrated</span>
+    </div>
+    <div>
+      <span class="metric-val" data-target="8">0</span>
+      <span class="metric-label">AI Models</span>
+      <span class="metric-sub">GPT-4, Claude, Gemini+</span>
+    </div>
+    <div>
+      <span class="metric-val" data-target="30">0</span>
+      <span class="metric-label">Blacklist checks</span>
+      <span class="metric-sub">per deliverability scan</span>
+    </div>
+    <div>
+      <span class="metric-val" data-target="6">0</span>
+      <span class="metric-label">Cloud providers</span>
+      <span class="metric-sub">AWS · GCP · Azure +</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── TAB SHOWCASE ── -->
+<section id="tabs-section">
+  <div class="tabs-inner">
+    <div class="section-header reveal">
+      <span class="section-tag">// Module Overview</span>
+      <h2 class="section-title">12 modules.<br/><em>One engine.</em></h2>
+    </div>
+    <div class="tab-showcase reveal">
+      <div class="tab-nav-pills" id="tab-pills"></div>
+      <div class="tab-content-area" id="tab-panels"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how">
+  <div class="section-header reveal">
+    <span class="section-tag">// Workflow</span>
+    <h2 class="section-title">From zero to<br/><em>mass scale.</em></h2>
+  </div>
+  <div class="steps-grid reveal">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Configure</div>
+      <p class="step-desc">Add SMTP servers, API keys for enrichment, AI models, proxies, and SMS gateways in the Setup hub.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Extract</div>
+      <p class="step-desc">Pull leads from Hunter, Apollo, LinkedIn, M365, or scrape domains and enrich with profiles and phone numbers.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Build</div>
+      <p class="step-desc">Use the AI Project tab to research prospects and generate hyper-personalized campaigns with any AI model.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">Validate</div>
+      <p class="step-desc">Test deliverability, warm up IPs, validate email lists, and check inbox placement before sending a single email.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-title">Deploy</div>
+      <p class="step-desc">Send solo or spin up an EC2/EKS cluster for parallel sending at massive scale with live monitoring.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── TECH ── -->
+<section id="tech">
+  <div class="tech-inner">
+    <div class="section-header reveal">
+      <span class="section-tag">// Integrations</span>
+      <h2 class="section-title">Connects to<br/><em>everything.</em></h2>
+    </div>
+    <div class="tech-grid reveal" id="tech-grid"></div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section id="cta">
+  <div class="orb-cta"></div>
+  <div class="cta-badge">Active &amp; Maintained</div>
+  <h2 class="cta-title reveal">Ready to send<br/><em>at scale?</em></h2>
+  <p class="cta-sub reveal">One license. One machine. Unlimited campaigns.<br/>Join operators already running Crack0x Engine.</p>
+
+  <div class="reveal" style="max-width:480px;margin:0 auto;">
+    <div id="access-form" style="
+      background:var(--card);border:1px solid var(--dim);border-radius:10px;
+      padding:36px 32px;text-align:left;position:relative;overflow:hidden;">
+
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;
+        background:linear-gradient(90deg,var(--cyan),var(--magenta));"></div>
+
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;
+        letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;margin-bottom:22px;">
+        // Request Access
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;" id="form-fields">
+
+        <label style="display:flex;flex-direction:column;gap:6px;
+          font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase;">
+          Full Name
+          <input id="f-name" type="text" placeholder="John Wick" style="
+            background:var(--panel);border:1px solid var(--lo);border-radius:5px;
+            padding:11px 14px;color:var(--hi);font-family:'JetBrains Mono',monospace;
+            font-size:12px;outline:none;transition:border-color 0.2s;width:100%;"
+            onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='var(--lo)'"/>
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px;
+          font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase;">
+          Telegram Username
+          <div style="position:relative;">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+              color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:14px;pointer-events:none;">@</span>
+            <input id="f-tg" type="text" placeholder="yourusername" style="
+              background:var(--panel);border:1px solid var(--lo);border-radius:5px;
+              padding:11px 14px 11px 30px;color:var(--hi);font-family:'JetBrains Mono',monospace;
+              font-size:12px;outline:none;width:100%;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='var(--lo)'"/>
+          </div>
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px;
+          font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase;">
+          Use Case <span style="color:var(--lo);font-size:9px;text-transform:none;">(optional)</span>
+          <textarea id="f-msg" rows="3" placeholder="Tell us how you plan to use Crack0x Engine..." style="
+            background:var(--panel);border:1px solid var(--lo);border-radius:5px;
+            padding:11px 14px;color:var(--hi);font-family:'JetBrains Mono',monospace;
+            font-size:12px;outline:none;resize:none;line-height:1.7;width:100%;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='var(--lo)'"></textarea>
+        </label>
+
+        <button id="submit-btn" onclick="submitAccessRequest()" style="
+          background:linear-gradient(135deg,var(--cyan),var(--magenta));color:#000;
+          font-weight:800;font-size:12px;padding:14px;border:none;border-radius:5px;
+          letter-spacing:0.14em;text-transform:uppercase;cursor:none;
+          transition:transform 0.2s,box-shadow 0.2s;margin-top:4px;width:100%;"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(0,205,200,0.35)'"
+          onmouseout="this.style.transform='';this.style.boxShadow=''">
+          Send Request →
+        </button>
+      </div>
+
+      <div id="form-success" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:52px;margin-bottom:16px;">✅</div>
+        <div style="color:var(--ok);font-weight:800;font-size:17px;margin-bottom:10px;letter-spacing:-0.3px;">Request Sent!</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mid);line-height:1.9;">
+          We received your request.<br/>We'll reach out on Telegram shortly.
+        </div>
+      </div>
+
+      <div id="form-error" style="display:none;margin-top:12px;padding:10px 14px;
+        background:rgba(255,51,102,0.1);border:1px solid rgba(255,51,102,0.3);
+        border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--err);">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <span class="footer-brand">🔥 CRACK0X ENGINE</span>
+  <span class="footer-note">// Elite Mass Communication Platform · v3.2 · Electron Build</span>
+</footer>
+
+<script>
+// ── Cursor ──────────────────────────────────────────────────────────────────
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function animCursor() {
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animCursor);
+})();
+document.querySelectorAll('a,button,.feat-card,.tab-pill,.tech-chip').forEach(el => {
+  el.addEventListener('mouseenter', () => { cur.style.transform = 'translate(-50%,-50%) scale(2.5)'; cur.style.background = 'var(--magenta)'; });
+  el.addEventListener('mouseleave', () => { cur.style.transform = 'translate(-50%,-50%) scale(1)'; cur.style.background = 'var(--cyan)'; });
+});
+
+// ── Card glow follow ─────────────────────────────────────────────────────────
+document.querySelectorAll('.feat-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left)/r.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top)/r.height * 100) + '%');
+  });
+});
+
+// ── Ticker ───────────────────────────────────────────────────────────────────
+const tickerItems = [
+  'SMTP Rotation', 'AI Campaign Builder', 'EC2 Cluster Deploy',
+  'Inbox Placement Testing', 'Power Dialer', 'Email Validation',
+  'M365 Extractor', 'Deliverability Score', 'A/B Testing',
+  'SPF · DKIM · DMARC', 'Content Variation', 'Telegram Reports',
+  'SMS Gateway', 'Proxy Rotation', 'Plugin Ecosystem',
+];
+const t = document.getElementById('ticker');
+const full = [...tickerItems, ...tickerItems].map(i =>
+  `<span class="ticker-item"><span>▸</span>${i}</span>`).join('');
+t.innerHTML = full + full;
+
+// ── Hero counters ────────────────────────────────────────────────────────────
+function animCount(el, target, suffix='', duration=1800) {
+  let start = null;
+  const fmt = n => target >= 10000 ? (n/1000).toFixed(0)+'k' : n;
+  function step(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(ease * target)) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+window.addEventListener('load', () => {
+  animCount(document.getElementById('cnt-smtp'), 999, '+');
+  animCount(document.getElementById('cnt-speed'), 50000, '+');
+  animCount(document.getElementById('cnt-modules'), 12, '');
+  animCount(document.getElementById('cnt-uptime'), 99, '%');
+});
+
+// ── Feature cards ────────────────────────────────────────────────────────────
+const FEATURES = [
+  { icon:'📧', title:'X-Email Campaigns', desc:'Multi-template HTML campaigns with rotation, scheduling, rate limiting, per-recipient tracking, and real-time delivery logs.', tags:['tag-cyan:Campaigns','tag-ok:Analytics','tag-warn:Scheduling'] },
+  { icon:'📱', title:'X-SMS Campaigns', desc:'Multi-gateway SMS blasting (Twilio, Vonage, Plivo, AWS SNS) with sender ID rotation, segment counter, and character limits.', tags:['tag-cyan:SMS','tag-mag:Multi-Gateway'] },
+  { icon:'🎨', title:'AI Project Builder', desc:'Auto-research prospects, generate personalized emails with GPT-4, Claude, Gemini or Grok. Role-based template matching and campaign rules.', tags:['tag-mag:AI','tag-ok:Personalization'] },
+  { icon:'📡', title:'SMTP Management', desc:'Unlimited SMTP servers with round-robin / weighted / random rotation, live health testing, diagnostics, auto-removal of failed servers.', tags:['tag-cyan:SMTP','tag-ok:Rotation'] },
+  { icon:'☁️', title:'Cloud Cluster', desc:'Deploy EC2 or EKS worker nodes on AWS, GCP, or Azure. Auto-IAM policy generation, live IP monitoring, per-worker sending logs.', tags:['tag-cyan:AWS','tag-cyan:EKS','tag-warn:Scale'] },
+  { icon:'🔍', title:'Extractor Suite', desc:'Hunter, Snov, Apollo, M365 device-login extractor. Domain search, profile enrichment, phone extraction with background data.', tags:['tag-ok:OSINT','tag-mag:M365','tag-cyan:Apollo'] },
+  { icon:'🧪', title:'Testing & Warm-Up', desc:'Inbox placement across 8 providers, deliverability scoring (30+ blacklists), mailbox validation, A/B testing, cluster health monitor.', tags:['tag-ok:Deliverability','tag-warn:Warmup'] },
+  { icon:'🛡️', title:'Evasion & Optimization', desc:'Content variation engine, sending pattern randomization, header diversity, link hygiene, CAN-SPAM/GDPR compliance, spam score analysis.', tags:['tag-cyan:Compliance','tag-ok:Content'] },
+  { icon:'📊', title:'Central Logs', desc:'Real-time log stream for all modules with CPU/memory/SMTP/proxy health dashboard, throughput tracking, and export.', tags:['tag-cyan:Monitoring','tag-warn:Realtime'] },
+  { icon:'📋', title:'Email Headers', desc:'Custom header editor, SPF/DKIM/DMARC DNS checker with templates, fingerprint spoofing, header debug inspector with color-coded output.', tags:['tag-ok:Auth','tag-mag:Fingerprint'] },
+  { icon:'📞', title:'Power Dialer', desc:'3CX / FreePBX / custom SIP integration, auto-advance queue, DTMF pad, call recording with waveform display, disposition logging, analytics.', tags:['tag-cyan:VoIP','tag-warn:SIP'] },
+  { icon:'🆘', title:'Support & Updates', desc:'Telegram bug reports with logs, interactive troubleshoot wizard, documentation hub, cloud updater, and plugin marketplace.', tags:['tag-ok:Updates','tag-mag:Plugins'] },
+];
+
+const grid = document.getElementById('feat-grid');
+FEATURES.forEach((f, i) => {
+  const tags = f.tags.map(t => {
+    const [cls, label] = t.split(':');
+    return `<span class="feat-tag ${cls}">${label}</span>`;
+  }).join('');
+  const card = document.createElement('div');
+  card.className = 'feat-card reveal';
+  card.style.transitionDelay = (i * 50) + 'ms';
+  card.innerHTML = `
+    <div class="corner"></div>
+    <span class="feat-icon">${f.icon}</span>
+    <div class="feat-title">${f.title}</div>
+    <div class="feat-desc">${f.desc}</div>
+    <div class="feat-tags">${tags}</div>
+  `;
+  grid.appendChild(card);
+});
+
+// ── Tab showcase ──────────────────────────────────────────────────────────────
+const TABS_DATA = [
+  { icon:'⚙️', label:'Setup', title:'Setup Hub', accent:'#00cdc8', items:[
+    'Unlimited SMTP server management with live health testing',
+    'API keys for 9 service categories: AI, SMS, enrichment, proxy, OSINT',
+    'Proxy list manager with type selection and rotation mode',
+    'Warm-up provider config: Instantly, Lemwarm, Mailreach, Smartlead',
+  ]},
+  { icon:'✉️', label:'X-Email', title:'X-Email', accent:'#00ff9f', items:[
+    'Import recipients from CSV/TXT or paste directly',
+    'Multiple From Names and Subjects with Fixed / Rotate / Random modes',
+    'HTML and plain-text templates with {name} {company} variables',
+    'Rate limiting, time windows, weekend pause scheduling',
+    'Per-recipient delivery analytics: opened, clicked, bounced',
+  ]},
+  { icon:'🎨', label:'Project', title:'AI Campaign Builder', accent:'#ff00aa', items:[
+    'Import leads from Extractor with one click',
+    'Auto-research company background, tech stack, pain points via AI',
+    'Generate full HTML emails with GPT-4o, Claude 3.5, Gemini, Grok',
+    'Role-based template matching (CEO → CTO → VP Sales etc.)',
+    'Export campaign directly to X-Email or X-SMS',
+  ]},
+  { icon:'☁️', label:'Cluster', title:'Cloud Cluster', accent:'#4a9eff', items:[
+    'Add AWS, GCP, or Azure account credentials',
+    'One-click IAM policy and trust policy generation',
+    'Deploy EC2 instances or EKS nodes as mailer workers',
+    'Each worker gets a share of SMTP pool and proxies',
+    'Live IP, CPU, memory, and sending log per worker',
+  ]},
+  { icon:'🧪', label:'Testing', title:'Testing & Warm-Up', accent:'#ffa500', items:[
+    'IP warm-up with configurable volume ramp and provider integration',
+    'Bulk email validation via ZeroBounce, NeverBounce, Kickbox',
+    'Deliverability scan: SPF, DKIM, DMARC, PTR, 30+ blacklists',
+    'Inbox placement test across Gmail, Outlook, Yahoo, ProtonMail +4',
+    'A/B test two subject/body variants with live winner detection',
+  ]},
+  { icon:'🔍', label:'Extractor', title:'Extractor Suite', accent:'#a78bfa', items:[
+    'Domain email extraction via Hunter.io, Snov.io, Apollo, Findymail',
+    'SERP-powered domain discovery from keyword searches',
+    'M365 device-login flow: extract emails, contacts, attachments',
+    'Profile enrichment: role, company, LinkedIn, background via Apollo',
+    'Phone + background data via Datagma — export to X-SMS',
+  ]},
+  { icon:'📞', label:'Dial', title:'Power Dialer', accent:'#00cdc8', items:[
+    'Power / Preview / Progressive dialer modes',
+    '3CX, FreePBX, Asterisk, Twilio, Vonage SIP integration',
+    'DTMF dialpad, mute, hold, and per-call recording',
+    'Disposition logging: Interested, Callback, Voicemail, DNC',
+    'Hourly call analytics, recording waveform playback',
+  ]},
+  { icon:'🆘', label:'Support', title:'Support & Ecosystem', accent:'#00ff9f', items:[
+    'Bug reports sent to Telegram with logs and machine ID',
+    'Interactive yes/no troubleshoot wizard for common issues',
+    'In-app documentation for all 12 modules',
+    'Cloud updater with changelog — or install from local file',
+    'Plugin marketplace: install, enable/disable, load .hmp files',
+  ]},
+];
+
+const pillContainer = document.getElementById('tab-pills');
+const panelContainer = document.getElementById('tab-panels');
+
+TABS_DATA.forEach((tab, i) => {
+  const pill = document.createElement('button');
+  pill.className = 'tab-pill' + (i === 0 ? ' active' : '');
+  pill.dataset.tab = i;
+  pill.innerHTML = `<span class="t-icon">${tab.icon}</span>${tab.label}`;
+  pill.style.cursor = 'none';
+  pillContainer.appendChild(pill);
+
+  const items = tab.items.map(it => `<div class="tfl-item">${it}</div>`).join('');
+  const panel = document.createElement('div');
+  panel.className = 'tab-panel' + (i === 0 ? ' active' : '');
+  panel.dataset.tab = i;
+  panel.innerHTML = `
+    <div class="tab-panel-title"><span style="color:${tab.accent}">${tab.icon}</span> ${tab.title}</div>
+    <div class="tab-panel-desc">Key capabilities of this module:</div>
+    <div class="tab-feature-list">${items}</div>
+  `;
+  panelContainer.appendChild(panel);
+});
+
+pillContainer.addEventListener('click', e => {
+  const pill = e.target.closest('.tab-pill');
+  if (!pill) return;
+  document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  document.querySelector(`.tab-panel[data-tab="${pill.dataset.tab}"]`).classList.add('active');
+});
+
+// ── Tech grid ─────────────────────────────────────────────────────────────────
+const TECH = [
+  ['Email','Hunter.io'], ['Email','Snov.io'], ['Email','Apollo.io'], ['Email','Findymail'],
+  ['AI','GPT-4o'], ['AI','Claude 3.5'], ['AI','Gemini Pro'], ['AI','Grok'],
+  ['SMS','Twilio'], ['SMS','Vonage'], ['SMS','Plivo'], ['SMS','AWS SNS'],
+  ['Cloud','AWS EC2'], ['Cloud','AWS EKS'], ['Cloud','GCP'], ['Cloud','Azure'],
+  ['Validate','ZeroBounce'], ['Validate','NeverBounce'], ['Validate','Kickbox'],
+  ['PBX','3CX'], ['PBX','FreePBX'], ['PBX','Asterisk'],
+  ['DB','SQLite (sql.js)'], ['Runtime','Electron'], ['UI','React + TS'],
+  ['Proxy','Webshare'], ['Proxy','Bright Data'], ['Enrich','Datagma'],
+];
+const tg = document.getElementById('tech-grid');
+TECH.forEach(([cat, name]) => {
+  tg.innerHTML += `<div class="tech-chip"><span class="t-cat">${cat}</span>${name}</div>`;
+});
+
+// ── Metric counters on scroll ─────────────────────────────────────────────────
+function animateMetric(el) {
+  const target = parseInt(el.dataset.target);
+  const suffix = target > 1000 ? '+' : target === 99 ? '%' : '';
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / 1600, 1);
+    const ease = 1 - Math.pow(1-p, 3);
+    const val = Math.round(ease * target);
+    el.textContent = target >= 100000 ? (val/1000).toFixed(0)+'k+' : val + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      // Metric animation
+      entry.target.querySelectorAll('[data-target]').forEach(animateMetric);
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+// Also observe metrics section
+const metricsSection = document.getElementById('metrics');
+if (metricsSection) revealObserver.observe(metricsSection);
+
+// ── Telegram access request ──────────────────────────────────────────────────
+async function submitAccessRequest() {
+  const name  = document.getElementById('f-name').value.trim();
+  const tg    = document.getElementById('f-tg').value.trim().replace(/^@/, '');
+  const msg   = document.getElementById('f-msg').value.trim();
+  const errEl = document.getElementById('form-error');
+  errEl.style.display = 'none';
+
+  if (!name) { showErr('Please enter your full name.'); return; }
+  if (!tg)   { showErr('Please enter your Telegram username.'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  const BOT_TOKEN = '8353913065:AAFyHCvPjlDrySYSg4VmJpjWbSTnd4tg8vY';
+  const CHAT_ID   = '6575108928';
+
+  const text = [
+    '🔥 *New Access Request — CRACK0X ENGINE*',
+    '',
+    `👤 *Name:* ${name}`,
+    `📱 *Telegram:* @${tg}`,
+    msg ? `💬 *Use Case:* ${msg}` : '💬 *Use Case:* —',
+    '',
+    `🕐 *Time:* ${new Date().toUTCString()}`,
+    `🌍 *Page:* ${location.href}`,
+  ].join('\n');
+
+  try {
+    const res = await fetch(
+      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text,
+          parse_mode: 'Markdown',
+        }),
+      }
+    );
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('form-fields').style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } else {
+      showErr('Telegram error: ' + (data.description || 'Unknown error'));
+      resetBtn();
+    }
+  } catch (e) {
+    showErr('Network error. Please try again or contact us directly on Telegram.');
+    resetBtn();
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+function resetBtn() {
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Send Request →';
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+</script>
+</body>
+</html>
