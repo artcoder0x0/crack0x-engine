@@ -19,10 +19,10 @@ const DB_FILE = path.join(__dirname, 'licenses_db.json');
 
 // ── Change this to a strong secret. The distributed app must send this
 //    in the X-License-Secret header, otherwise all write requests are rejected.
-const API_SECRET = process.env.API_SECRET || 'crack0x-dev-secret-2024';
+const API_SECRET = process.env.API_SECRET || 'CHANGE_THIS_SECRET_KEY';
 
 // ── Admin dashboard password (for the web UI login)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'crack0x-admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 app.use(express.json({ limit: '1mb' }));
 
