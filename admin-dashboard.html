@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CRACK0X — License Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0b0d; --surface: #111318; --surface2: #181b21;
+      --border: #1e2330; --border2: #2a3045;
+      --text: #c8cdd8; --text-dim: #5a6278; --text-bright: #edf0f7;
+      --accent: #00e5ff; --accent-dim: #007a8a;
+      --green: #00ff88; --green-dim: #00663a;
+      --red: #ff3b5c; --red-dim: #6b0020;
+      --amber: #ffb300; --amber-dim: #5c4000;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+    }
+
+    /* ── LOGIN ── */
+    .login-screen {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: var(--bg); z-index: 500;
+    }
+    .login-box {
+      width: 360px; background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 40px; display: flex; flex-direction: column; gap: 20px;
+    }
+    .login-logo { font-family: var(--sans); font-weight: 800; font-size: 24px; color: var(--text-bright); }
+    .login-logo span { color: var(--accent); }
+    .login-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+    .login-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+      color: var(--text); font-family: var(--mono); font-size: 13px; padding: 10px 12px;
+      border-radius: 6px; outline: none; transition: border-color 0.15s;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      padding: 11px; border-radius: 6px; border: 1px solid var(--accent);
+      background: rgba(0,229,255,0.1); color: var(--accent); font-family: var(--mono);
+      font-size: 12px; letter-spacing: 1px; cursor: pointer; transition: all 0.15s;
+    }
+    .login-btn:hover { background: rgba(0,229,255,0.2); }
+    .login-err { font-size: 11px; color: var(--red); display: none; }
+
+    /* ── APP SHELL ── */
+    .app { display: grid; grid-template-rows: 56px 1fr; grid-template-columns: 240px 1fr; height: 100vh; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      grid-column: 1/-1; display: flex; align-items: center; padding: 0 20px;
+      background: var(--surface); border-bottom: 1px solid var(--border); gap: 16px;
+    }
+    .logo { font-family: var(--sans); font-weight: 800; font-size: 18px; color: var(--text-bright); }
+    .logo span { color: var(--accent); }
+    .topbar-sep { flex: 1; }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px; padding: 4px 10px;
+      border-radius: 4px; font-size: 11px; letter-spacing: 0.5px;
+      border: 1px solid var(--border2); background: var(--surface2);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+    .dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .btn-sm {
+      background: none; border: 1px solid var(--border2); color: var(--text-dim);
+      padding: 5px 12px; border-radius: 4px; cursor: pointer; font-family: var(--mono);
+      font-size: 11px; letter-spacing: 0.5px; transition: all 0.15s;
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── SIDEBAR ── */
+    .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); padding: 8px 20px 6px; text-transform: uppercase; }
+    .stat-card {
+      margin: 4px 12px; padding: 12px 14px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: border-color 0.15s;
+    }
+    .stat-card:hover { border-color: var(--border2); }
+    .stat-card.active { border-color: var(--accent); }
+    .stat-card[data-filter="revoked"].active { border-color: var(--red); }
+    .stat-card[data-filter="expired"].active { border-color: var(--amber); }
+    .stat-card[data-filter="active"].active  { border-color: var(--green); }
+    .stat-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); }
+    .stat-value { font-family: var(--sans); font-size: 28px; font-weight: 800; color: var(--text-bright); line-height: 1; }
+    .stat-card.active .stat-value { color: var(--accent); }
+    .stat-card[data-filter="revoked"].active .stat-value { color: var(--red); }
+    .stat-card[data-filter="expired"].active .stat-value { color: var(--amber); }
+    .stat-card[data-filter="active"].active  .stat-value { color: var(--green); }
+    .sidebar-div { height: 1px; background: var(--border); margin: 12px 20px; }
+
+    /* ── MAIN ── */
+    .main { display: flex; flex-direction: column; overflow: hidden; }
+    .toolbar {
+      display: flex; align-items: center; gap: 10px; padding: 12px 20px;
+      border-bottom: 1px solid var(--border); background: var(--surface2); flex-shrink: 0;
+    }
+    .search-wrap { position: relative; flex: 1; max-width: 360px; }
+    .search-wrap::before { content: '⌕'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 15px; pointer-events: none; }
+    .search-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); font-family: var(--mono); font-size: 12px;
+      padding: 7px 10px 7px 30px; border-radius: 4px; outline: none; transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-dim); }
+    .filter-tag {
+      padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border2);
+      background: var(--surface); color: var(--text-dim); font-family: var(--mono);
+      font-size: 11px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px;
+    }
+    .filter-tag:hover, .filter-tag.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.05); }
+    .filter-tag[data-s="revoked"].active { border-color:var(--red);   color:var(--red);   background:rgba(255,59,92,0.05); }
+    .filter-tag[data-s="expired"].active { border-color:var(--amber); color:var(--amber); background:rgba(255,179,0,0.05); }
+    .filter-tag[data-s="active"].active  { border-color:var(--green); color:var(--green); background:rgba(0,255,136,0.05); }
+    .count-label { margin-left: auto; font-size: 11px; color: var(--text-dim); }
+
+    /* ── TABLE ── */
+    .table-wrap { flex: 1; overflow: auto; }
+    .table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { position: sticky; top: 0; z-index: 10; }
+    th { padding: 10px 14px; text-align: left; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tr.row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+    tr.row:hover { background: var(--surface2); }
+    tr.row.selected { background: rgba(0,229,255,0.04); }
+    td { padding: 10px 14px; vertical-align: middle; white-space: nowrap; }
+    .cell-host { font-weight: 500; color: var(--text-bright); }
+    .cell-key { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--accent-dim); }
+    .cell-dim { font-size: 11px; color: var(--text-dim); }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
+      border-radius: 3px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; font-weight: 500;
+    }
+    .badge.active  { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid var(--green-dim); }
+    .badge.revoked { background: rgba(255,59,92,0.1);  color: var(--red);   border: 1px solid var(--red-dim); }
+    .badge.expired { background: rgba(255,179,0,0.1);  color: var(--amber); border: 1px solid var(--amber-dim); }
+    .badge .dot-s { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: none; box-shadow: none; }
+    .days-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+    .days-bar { flex: 1; height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+    .days-fill { height: 100%; border-radius: 2px; }
+    .days-fill.ok     { background: var(--green); }
+    .days-fill.warn   { background: var(--amber); }
+    .days-fill.danger { background: var(--red); }
+    .days-num { font-size: 11px; color: var(--text-dim); min-width: 28px; }
+    .gen-badge { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); font-size: 10px; color: var(--text-dim); }
+    .action-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border2); background: none; color: var(--text-dim); font-family: var(--mono); font-size: 10px; cursor: pointer; transition: all 0.15s; }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.d:hover { border-color: var(--red);   color: var(--red); }
+    .action-btn.g:hover { border-color: var(--green); color: var(--green); }
+    .copy-flash { cursor: pointer; padding: 1px 4px; border-radius: 3px; transition: background 0.1s; }
+    .copy-flash:hover { background: rgba(0,229,255,0.1); }
+    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 260px; color: var(--text-dim); gap: 8px; }
+    .empty .icon { font-size: 32px; opacity: 0.3; }
+
+    /* ── DETAIL PANEL ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .panel {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 480px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 101; transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel.open { transform: translateX(0); }
+    .panel-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+    .panel-title { font-family: var(--sans); font-weight: 700; font-size: 15px; color: var(--text-bright); }
+    .panel-sub { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+    .btn-close { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; }
+    .btn-close:hover { color: var(--text-bright); }
+    .panel-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border2); }
+    .section-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 10px; }
+    .kk { color: var(--text-dim); font-size: 11px; display: flex; align-items: flex-start; padding-top: 2px; }
+    .kv-val { font-size: 12px; color: var(--text); word-break: break-all; }
+    .kv-val.bright { color: var(--text-bright); }
+    .kv-val.accent { color: var(--accent); }
+    .kv-val.green  { color: var(--green); }
+    .kv-val.red    { color: var(--red); }
+    .kv-val.amber  { color: var(--amber); }
+    .hist-item { padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; }
+    .hist-item.cur { border-color: var(--accent-dim); }
+    .hist-gen { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+    .hist-key { font-size: 12px; color: var(--accent); margin: 4px 0; word-break: break-all; }
+    .hist-meta { font-size: 10px; color: var(--text-dim); }
+    .notes-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-family: var(--mono); font-size: 12px; padding: 8px 10px; border-radius: 4px; outline: none; resize: vertical; min-height: 70px; transition: border-color 0.15s; }
+    .notes-input:focus { border-color: var(--accent); }
+    .panel-actions { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+    .btn-primary { padding: 8px 16px; border-radius: 5px; border: 1px solid var(--accent); background: rgba(0,229,255,0.08); color: var(--accent); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s; }
+    .btn-primary:hover { background: rgba(0,229,255,0.16); }
+    .btn-danger  { padding: 8px 16px; border-radius: 5px; border: 1px solid var(--red); background: rgba(255,59,92,0.08); color: var(--red); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s; }
+    .btn-danger:hover  { background: rgba(255,59,92,0.16); }
+    .btn-success { padding: 8px 16px; border-radius: 5px; border: 1px solid var(--green); background: rgba(0,255,136,0.08); color: var(--green); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s; }
+    .btn-success:hover { background: rgba(0,255,136,0.16); }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; padding: 24px; width: 400px; display: flex; flex-direction: column; gap: 16px; }
+    .modal-title { font-family: var(--sans); font-weight: 700; font-size: 16px; color: var(--text-bright); }
+    .modal-body { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+    .modal-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-family: var(--mono); font-size: 12px; padding: 8px 10px; border-radius: 4px; outline: none; }
+    .modal-input:focus { border-color: var(--red); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .modal-cancel { padding: 7px 14px; border-radius: 4px; border: 1px solid var(--border2); background: none; color: var(--text-dim); font-family: var(--mono); font-size: 11px; cursor: pointer; }
+    .modal-cancel:hover { color: var(--text); }
+
+    /* ── REGEN RESULT ── */
+    .regen-result { background: var(--surface2); border: 1px solid var(--green-dim); border-radius: 6px; padding: 14px; }
+    .regen-key { font-family: var(--mono); font-size: 14px; color: var(--green); letter-spacing: 2px; margin: 8px 0; word-break: break-all; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 400; padding: 10px 16px; border-radius: 6px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text); opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; max-width: 360px; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.ok   { border-color: var(--green); color: var(--green); }
+    .toast.err  { border-color: var(--red);   color: var(--red); }
+    .toast.info { border-color: var(--accent); color: var(--accent); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════════════════════════════════════════════════════════════════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div>
+      <div class="login-logo">CRACK<span>0</span>X</div>
+      <div class="login-sub" style="margin-top:4px">License Admin Dashboard</div>
+    </div>
+    <input class="login-input" id="loginPass" type="password" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <div class="login-err" id="loginErr">Incorrect password</div>
+    <button class="login-btn" onclick="doLogin()">SIGN IN →</button>
+    <div style="font-size:10px;color:var(--text-dim);text-align:center">
+      Server: <span id="serverUrlDisplay"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ════ APP ══════════════════════════════════════════════════════════════════ -->
+<div class="app" id="appShell" style="display:none">
+  <header class="topbar">
+    <div class="logo">CRACK<span>0</span>X</div>
+    <span style="font-size:11px;color:var(--text-dim);letter-spacing:1px">LICENSE ADMIN</span>
+    <div class="topbar-sep"></div>
+    <div class="status-pill" id="serverStatus">
+      <div class="dot" id="serverDot"></div>
+      <span id="serverStatusText">CONNECTED</span>
+    </div>
+    <button class="btn-sm" onclick="loadData()">↺ REFRESH</button>
+    <button class="btn-sm" onclick="doLogout()">SIGN OUT</button>
+  </header>
+
+  <aside class="sidebar">
+    <div class="sidebar-label">OVERVIEW</div>
+    <div class="stat-card active" data-filter="all"       onclick="setFilter('all',this)"><div class="stat-label">TOTAL</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card"        data-filter="active"    onclick="setFilter('active',this)"><div class="stat-label">ACTIVE</div><div class="stat-value" id="s-active">—</div></div>
+    <div class="stat-card"        data-filter="expired"   onclick="setFilter('expired',this)"><div class="stat-label">EXPIRED</div><div class="stat-value" id="s-expired">—</div></div>
+    <div class="stat-card"        data-filter="revoked"   onclick="setFilter('revoked',this)"><div class="stat-label">REVOKED</div><div class="stat-value" id="s-revoked">—</div></div>
+    <div class="sidebar-div"></div>
+    <div class="sidebar-label">FILTERS</div>
+    <div class="stat-card"        data-filter="activated" onclick="setFilter('activated',this)"><div class="stat-label">ACTIVATED</div><div class="stat-value" id="s-activated">—</div></div>
+  </aside>
+
+  <main class="main">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input class="search-input" id="searchInput" placeholder="Search hostname, machine ID, key..." oninput="renderTable()" />
+      </div>
+      <button class="filter-tag active" data-s="all"     onclick="setFilter('all',    document.querySelector('[data-filter=all]'))">ALL</button>
+      <button class="filter-tag"        data-s="active"  onclick="setFilter('active', document.querySelector('[data-filter=active]'))">ACTIVE</button>
+      <button class="filter-tag"        data-s="expired" onclick="setFilter('expired',document.querySelector('[data-filter=expired]'))">EXPIRED</button>
+      <button class="filter-tag"        data-s="revoked" onclick="setFilter('revoked',document.querySelector('[data-filter=revoked]'))">REVOKED</button>
+      <span class="count-label" id="countLabel">0 records</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>HOSTNAME</th><th>MACHINE ID</th><th>CURRENT KEY</th>
+            <th>STATUS</th><th>DAYS LEFT</th><th>GEN</th><th>LAST SEEN</th><th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-dim)"><span class="spinner"></span>Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- ════ DETAIL PANEL ════════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<aside class="panel" id="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="p-title">—</div>
+      <div class="panel-sub"   id="p-sub">—</div>
+    </div>
+    <button class="btn-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body" id="p-body"></div>
+  <div class="panel-actions" id="p-actions"></div>
+</aside>
+
+<!-- ════ REVOKE MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="revokeModal">
+  <div class="modal">
+    <div class="modal-title">⚠ Revoke License</div>
+    <div class="modal-body">This will immediately block validation on the target machine. The user will see a "LICENSE REVOKED" error.</div>
+    <input class="modal-input" id="revokeReason" placeholder="Reason (optional)" />
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeRevoke()">CANCEL</button>
+      <button class="btn-danger" onclick="confirmRevoke()">CONFIRM REVOKE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ REGEN RESULT MODAL ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="regenModal">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--green)">✓ New Key Generated</div>
+    <div class="modal-body" id="regenMsg"></div>
+    <div class="regen-result">
+      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)">NEW LICENSE KEY</div>
+      <div class="regen-key copy-flash" id="regenKey" onclick="copyText(document.getElementById('regenKey').textContent)">—</div>
+      <div style="font-size:10px;color:var(--text-dim)">Click key to copy · Send this to the user via Telegram</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-success" onclick="copyText(document.getElementById('regenKey').textContent);showToast('Key copied!','ok')">⎘ COPY KEY</button>
+      <button class="modal-cancel" onclick="closeRegenModal()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG — change SERVER_URL if your admin-server runs on a different host/port
+// ═══════════════════════════════════════════════════════════════════════════════
+const SERVER_URL = 'http://localhost:3000';
+
+document.getElementById('serverUrlDisplay').textContent = SERVER_URL;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+let adminToken = sessionStorage.getItem('adminToken') || null;
+let allRecords = [];
+let currentFilter = 'all';
+let selectedId = null;
+let pendingRevokeId = null;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════════════════════════
+async function api(method, path, body) {
+  const res = await fetch(SERVER_URL + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-admin-token': adminToken
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════════════════════
+async function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  try {
+    const data = await fetch(SERVER_URL + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+    if (!data.ok) throw new Error('bad password');
+    const json = await data.json();
+    adminToken = json.token;
+    sessionStorage.setItem('adminToken', adminToken);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display   = 'grid';
+    loadData();
+  } catch {
+    const err = document.getElementById('loginErr');
+    err.style.display = 'block';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+async function doLogout() {
+  try { await api('POST', '/api/admin/logout'); } catch {}
+  adminToken = null;
+  sessionStorage.removeItem('adminToken');
+  location.reload();
+}
+
+// Auto-login if token exists in session
+if (adminToken) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'grid';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════════════════════════════
+async function loadData() {
+  try {
+    const [records, stats] = await Promise.all([
+      api('GET', '/api/admin/licenses'),
+      api('GET', '/api/admin/stats')
+    ]);
+    allRecords = records;
+
+    document.getElementById('s-total').textContent     = stats.total;
+    document.getElementById('s-active').textContent    = stats.active;
+    document.getElementById('s-expired').textContent   = stats.expired;
+    document.getElementById('s-revoked').textContent   = stats.revoked;
+    document.getElementById('s-activated').textContent = stats.activated;
+
+    setServerOnline(true);
+    renderTable();
+  } catch (err) {
+    setServerOnline(false);
+    if (err.message.includes('401')) { doLogout(); return; }
+    showToast('Failed to load data — is the server running?', 'err');
+  }
+}
+
+function setServerOnline(online) {
+  const dot  = document.getElementById('serverDot');
+  const text = document.getElementById('serverStatusText');
+  dot.className  = online ? 'dot' : 'dot offline';
+  text.textContent = online ? 'CONNECTED' : 'OFFLINE';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FILTER + RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+function status(r) {
+  if (r.revoked) return 'revoked';
+  if (new Date(r.expires_at) <= new Date()) return 'expired';
+  return 'active';
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.filter-tag').forEach(t =>
+    t.classList.toggle('active', t.dataset.s === f || (f === 'all' && t.dataset.s === 'all'))
+  );
+  renderTable();
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  return allRecords.filter(r => {
+    const s = status(r);
+    const match =
+      currentFilter === 'all'       ? true :
+      currentFilter === 'activated' ? r.activated :
+      s === currentFilter;
+    const search = !q || r.hostname.toLowerCase().includes(q) ||
+      r.machine_id.toLowerCase().includes(q) || r.license_key.toLowerCase().includes(q) ||
+      (r.notes||'').toLowerCase().includes(q);
+    return match && search;
+  });
+}
+
+function renderTable() {
+  const records = getFiltered();
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('countLabel').textContent = `${records.length} record${records.length!==1?'s':''}`;
+
+  if (!records.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="icon">⬡</div><p>No records match your filter.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = records.map(r => {
+    const s = status(r);
+    const now = Date.now();
+    const daysLeft = Math.max(0, Math.floor((new Date(r.expires_at) - now) / 86400000));
+    const pct = Math.round(daysLeft / 30 * 100);
+    const bc = pct > 50 ? 'ok' : pct > 20 ? 'warn' : 'danger';
+    const badge =
+      s === 'active'  ? `<span class="badge active"><span class="dot-s"></span>ACTIVE</span>` :
+      s === 'expired' ? `<span class="badge expired"><span class="dot-s"></span>EXPIRED</span>` :
+                        `<span class="badge revoked"><span class="dot-s"></span>REVOKED</span>`;
+    const lastSeen = r.last_seen ? fmtDateShort(r.last_seen) : '—';
+    return `<tr class="row ${selectedId===r.machine_id?'selected':''}" onclick="openPanel('${r.machine_id}')">
+      <td>
+        <div class="cell-host">${esc(r.hostname)}</div>
+        ${r.notes?`<div class="cell-dim" style="margin-top:2px">${esc(r.notes)}</div>`:''}
+      </td>
+      <td><span class="cell-dim copy-flash" onclick="event.stopPropagation();copyText('${r.machine_id}')" title="Click to copy">${r.machine_id.substring(0,12)}…</span></td>
+      <td><span class="cell-key copy-flash" onclick="event.stopPropagation();copyText('${r.license_key}')" title="Click to copy">${r.license_key}</span></td>
+      <td>${badge}</td>
+      <td>${s==='active'?`<div class="days-bar-wrap"><div class="days-bar"><div class="days-fill ${bc}" style="width:${pct}%"></div></div><span class="days-num">${daysLeft}d</span></div>`:`<span class="cell-dim">—</span>`}</td>
+      <td><span class="gen-badge">${r.generation_count||1}</span></td>
+      <td><span class="cell-dim">${lastSeen}</span></td>
+      <td>
+        <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
+          ${s!=='revoked'
+            ? `<button class="action-btn d" onclick="openRevoke('${r.machine_id}')">REVOKE</button>`
+            : `<button class="action-btn g" onclick="reinstateRecord('${r.machine_id}')">REINSTATE</button>`}
+          <button class="action-btn" onclick="regenRecord('${r.machine_id}')">REGEN</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DETAIL PANEL
+// ═══════════════════════════════════════════════════════════════════════════════
+function openPanel(machineId) {
+  const r = allRecords.find(x => x.machine_id === machineId);
+  if (!r) return;
+  selectedId = machineId;
+  renderTable();
+
+  const s = status(r);
+  const sc = s === 'active' ? 'green' : s === 'expired' ? 'amber' : 'red';
+  const now = Date.now();
+  const daysLeft = Math.max(0, Math.floor((new Date(r.expires_at) - now) / 86400000));
+  const poolPct = Math.round(((30-(r.total_days_consumed||0))/30)*100);
+
+  document.getElementById('p-title').textContent = r.hostname;
+  document.getElementById('p-sub').textContent   = r.machine_id;
+
+  document.getElementById('p-body').innerHTML = `
+    <div>
+      <div class="section-title">MACHINE INFO</div>
+      <div class="kv">
+        <span class="kk">Hostname</span><span class="kv-val bright">${esc(r.hostname)}</span>
+        <span class="kk">Platform</span><span class="kv-val">${esc(r.platform||'—')}</span>
+        <span class="kk">Machine ID</span><span class="kv-val copy-flash" onclick="copyText('${r.machine_id}')">${r.machine_id}</span>
+        <span class="kk">IP (last seen)</span><span class="kv-val">${esc(r.ip||'—')}</span>
+        <span class="kk">Status</span><span class="kv-val ${sc}">${s.toUpperCase()}${r.revoked&&r.revoked_reason?' — '+esc(r.revoked_reason):''}</span>
+        <span class="kk">Activated</span><span class="kv-val">${r.activated?'✓ '+fmtDate(r.activation_date):'✗ Not yet'}</span>
+        <span class="kk">Last seen</span><span class="kv-val">${r.last_seen?fmtDate(r.last_seen):'—'}</span>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">CURRENT LICENSE</div>
+      <div class="kv">
+        <span class="kk">Key</span><span class="kv-val accent copy-flash" onclick="copyText('${r.license_key}')">${r.license_key}</span>
+        <span class="kk">Generation</span><span class="kv-val">#${r.generation_count||1}</span>
+        <span class="kk">First issued</span><span class="kv-val">${fmtDate(r.original_created_at)}</span>
+        <span class="kk">Last regen</span><span class="kv-val">${fmtDate(r.last_generated_at)}</span>
+        <span class="kk">Expires</span><span class="kv-val ${sc}">${fmtDate(r.expires_at)}</span>
+        <span class="kk">Days left</span><span class="kv-val">
+          <div class="days-bar-wrap" style="min-width:160px">
+            <div class="days-bar" style="flex:1"><div class="days-fill ${poolPct>50?'ok':poolPct>20?'warn':'danger'}" style="width:${poolPct}%"></div></div>
+            <span class="days-num">${daysLeft}d</span>
+          </div>
+        </span>
+        <span class="kk">Pool used</span><span class="kv-val">${r.total_days_consumed||0} / 30 days</span>
+      </div>
+    </div>
+    ${r.history&&r.history.length?`
+    <div>
+      <div class="section-title">GENERATION HISTORY</div>
+      ${r.history.slice().reverse().map((h,i)=>`
+        <div class="hist-item ${i===0?'cur':''}">
+          <div class="hist-gen">GEN #${h.generation_number}${i===0?' — CURRENT':''}</div>
+          <div class="hist-key copy-flash" onclick="copyText('${h.license_key}')">${h.license_key}</div>
+          <div class="hist-meta">Issued: ${fmtDate(h.generated_at)} · Expires: ${fmtDate(h.expires_at)} · ${h.total_days_consumed}d consumed${h.revoked?' · <span style="color:var(--red)">REVOKED</span>':''}</div>
+        </div>`).join('')}
+    </div>`:''}
+    <div>
+      <div class="section-title">NOTES</div>
+      <textarea class="notes-input" id="notesInput" onblur="saveNotes('${r.machine_id}')">${esc(r.notes||'')}</textarea>
+    </div>
+  `;
+
+  document.getElementById('p-actions').innerHTML = `
+    <button class="btn-primary" onclick="regenRecord('${r.machine_id}')">↺ REGEN KEY</button>
+    ${s!=='revoked'
+      ? `<button class="btn-danger" onclick="openRevoke('${r.machine_id}')">⊘ REVOKE</button>`
+      : `<button class="btn-success" onclick="reinstateRecord('${r.machine_id}')">✓ REINSTATE</button>`}
+    <button class="btn-primary" onclick="copyText('${r.license_key}');showToast('Key copied!','ok')">⎘ COPY KEY</button>
+    <button class="btn-primary" style="margin-left:auto;border-color:var(--border2);color:var(--text-dim)" onclick="deleteRecord('${r.machine_id}')">🗑 DELETE</button>
+  `;
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+}
+
+function closePanel() {
+  selectedId = null;
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+function openRevoke(id) { pendingRevokeId = id; document.getElementById('revokeReason').value=''; document.getElementById('revokeModal').classList.add('open'); }
+function closeRevoke()  { pendingRevokeId = null; document.getElementById('revokeModal').classList.remove('open'); }
+function closeRegenModal() { document.getElementById('regenModal').classList.remove('open'); }
+
+async function confirmRevoke() {
+  if (!pendingRevokeId) return;
+  const id = pendingRevokeId;  // capture before closeRevoke() nulls it
+  const reason = document.getElementById('revokeReason').value.trim();
+  closeRevoke();
+  try {
+    await api('POST', `/api/admin/revoke/${id}`, { reason });
+    showToast('License revoked', 'ok');
+    await loadData();
+    if (selectedId === id) openPanel(id);
+  } catch { showToast('Failed to revoke', 'err'); }
+}
+
+async function reinstateRecord(id) {
+  try {
+    await api('POST', `/api/admin/reinstate/${id}`);
+    showToast('License reinstated', 'ok');
+    await loadData();
+    if (selectedId === id) openPanel(id);
+  } catch { showToast('Failed to reinstate', 'err'); }
+}
+
+async function regenRecord(id) {
+  try {
+    const result = await api('POST', `/api/admin/regenerate/${id}`);
+    document.getElementById('regenKey').textContent = result.newKey;
+    document.getElementById('regenMsg').textContent = result.message;
+    document.getElementById('regenModal').classList.add('open');
+    await loadData();
+    if (selectedId === id) openPanel(id);
+  } catch { showToast('Failed to regenerate', 'err'); }
+}
+
+async function saveNotes(id) {
+  const notes = document.getElementById('notesInput')?.value ?? '';
+  try {
+    await api('PUT', `/api/admin/notes/${id}`, { notes });
+    const r = allRecords.find(x => x.machine_id === id);
+    if (r) r.notes = notes;
+    renderTable();
+  } catch { console.warn('Failed to save notes'); }
+}
+
+async function deleteRecord(id) {
+  if (!confirm(`Permanently delete record for machine:\n${id}\n\nThis cannot be undone.`)) return;
+  try {
+    await api('DELETE', `/api/admin/licenses/${id}`);
+    showToast('Record deleted', 'info');
+    closePanel();
+    await loadData();
+  } catch { showToast('Failed to delete', 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════════════════
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}); }
+  catch { return iso; }
+}
+function fmtDateShort(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}); }
+  catch { return iso; }
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function copyText(t) {
+  navigator.clipboard?.writeText(t).catch(()=>{const e=document.createElement('textarea');e.value=t;document.body.appendChild(e);e.select();document.execCommand('copy');document.body.removeChild(e);});
+  showToast('Copied!','info');
+}
+
+let _toastTimer;
+function showToast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `toast ${type} show`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('regenModal').classList.contains('open')) { closeRegenModal(); return; }
+    if (document.getElementById('revokeModal').classList.contains('open')) { closeRevoke(); return; }
+    closePanel();
+  }
+});
+
+// Auto-load if already authenticated
+if (adminToken) loadData();
+</script>
+</body>
+</html>

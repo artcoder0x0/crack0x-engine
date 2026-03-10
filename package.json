@@ -1,0 +1,22 @@
+{
+  "name": "crack0x-license-admin",
+  "version": "1.0.0",
+  "description": "CRACK0X License Admin Server — C2 dashboard for license management",
+  "main": "admin-server.js",
+  "scripts": {
+    "start": "node admin-server.js",
+    "start:prod": "API_SECRET=your_secret_here ADMIN_PASSWORD=your_password_here node admin-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "notes": {
+    "setup": [
+      "1. npm install",
+      "2. Edit admin-server.js — change API_SECRET and ADMIN_PASSWORD at the top",
+      "3. npm start",
+      "4. Open http://localhost:3000 in your browser",
+      "5. In LicenseService.ts — set ADMIN_SERVER_URL and ADMIN_API_SECRET to match"
+    ]
+  }
+}
